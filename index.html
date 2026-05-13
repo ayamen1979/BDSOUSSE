@@ -1,90 +1,105 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>PFE - Cartographie Interactive de Sousse</title>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PFE - Cartographie Interactive de Sousse</title>
 
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-        <link rel="stylesheet" href="css/leaflet.css">
-        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
-        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
-        <link rel="stylesheet" href="css/qgis2web.css">
-        <link rel="stylesheet" href="css/fontawesome-all.min.css">
-        <link rel="stylesheet" href="css/leaflet.photon.css">
-        <link rel="stylesheet" href="css/leaflet-measure.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/leaflet.css">
+    <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+    <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+    <link rel="stylesheet" href="css/qgis2web.css">
+    <link rel="stylesheet" href="css/fontawesome-all.min.css">
+    <link rel="stylesheet" href="css/leaflet.photon.css">
+    <link rel="stylesheet" href="css/leaflet-measure.css">
 
-        <style>
-            body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-            /* Ajustement de la hauteur pour Navbar + Footer */
-            #map {
-                width: 100%;
-                height: calc(100vh - 160px); /* Ajusté pour laisser place au header et footer */
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            }
-            .hero-section {
-                background: linear-gradient(135deg, #004a99 0%, #007bff 100%);
-                color: white;
-                padding: 2rem 0;
-            }
-            .navbar-brand { font-weight: bold; }
-            footer { background: #f8f9fa; border-top: 3px solid #004a99; padding: 1.5rem 0; font-size: 0.9rem; }
-        </style>
-    </head>
-    <body>
+    <style>
+        html, body { height: 100%; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding-top: 56px; }
 
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-            <div class="container">
-                <a class="navbar-brand" href="#">PFE | Topographie & Géomatique</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav ms-auto">
-                        <li class="nav-item"><a class="nav-link active" href="#">Accueil</a></li>
-                        <li class="nav-item"><a class="nav-link" href="#map">Carte Interactive</a></li>
-                        <li class="nav-item"><a class="nav-link text-info" href="https://github.com/ayamen1979/BDSOUSSE" target="_blank">Dépôt GitHub</a></li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-
-        <header class="hero-section text-center">
-            <div class="container">
-                <h1 class="display-5 fw-bold">Cartographie Urbaine de Sousse</h1>
-                <p class="lead">Plateforme de Webmapping issue de levés photogrammétriques haute précision</p>
-            </div>
-        </header>
-
-        <main class="container-fluid my-3">
-            <div class="row px-md-5">
-                <div class="col-12">
-                    <div id="map"></div>
-                </div>
-            </div>
-        </main>
-
-        <footer class="text-center text-muted">
-            <div class="container">
-                <p class="mb-1">© 2026 - Projet de Fin d'Études | Réalisé par <strong>Yamen Abbes & Kabil Ezzine</strong></p>
-                <p>Données issues du capteur Leica TerrainMapper - Précision RMS 1,33 cm</p>
-            </div>
-        </footer>
-
-        <script src="js/qgis2web_expressions.js"></script>
-        <script src="js/leaflet.js"></script>
-        <script src="js/L.Control.Layers.Tree.js"></script>
-        <script src="js/L.Control.Locate.min.js"></script>
-        <script src="js/leaflet.js"></script>
-        <script src="js/leaflet.photon.js"></script>
-        <script src="js/leaflet-measure.js"></script>
-        html, body, #map {
+        #map {
             width: 100%;
-            height: 100%;
-            padding: 0;
-            margin: 0;
+            height: calc(100vh - 120px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        </style>
+
+        .hero-section {
+            background: linear-gradient(135deg, #004a99 0%, #007bff 100%);
+            color: white;
+            padding: 2rem 0;
+        }
+
+        .coordinate-display {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 15px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #004a99;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #004a99;
+            z-index: 1000;
+        }
+.leaflet-top.leaflet-left {
+        margin-top: 80px; /* Ajustez ce nombre pour descendre plus ou moins */
+    }
+
+        footer { background: #f8f9fa; border-top: 3px solid #004a99; padding: 1.5rem 0; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="#">PFE - Cartographie de Sousse</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="javascript:window.location.reload()">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#map">Carte Interactive</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero-section text-center">
+        <div class="container">
+            <h1 class="display-5 fw-bold">Cartographie Urbaine de Sousse</h1>
+            <p class="lead">Plateforme de Webmapping issue de levés photogrammétriques haute précision</p>
+        </div>
+    </header>
+
+    <main class="container-fluid my-3">
+        <div class="row px-md-5">
+            <div class="col-12">
+                <div id="map"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center text-muted">
+        <div class="container">
+            <p class="mb-1">© 2026 - Projet de Fin d'Études | Réalisé par <strong>Yamen Abbes & Kabil Ezzine</strong></p>
+        </div>
+    </footer>
+
+    <div id="coordinates" class="coordinate-display">Longitude: 0.00000 | Latitude: 0.00000</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/leaflet.js"></script>
+    <script src="js/qgis2web_expressions.js"></script>
+    <script src="js/L.Control.Layers.Tree.js"></script>
+    <script src="js/L.Control.Locate.min.js"></script>
+    <script src="js/leaflet.photon.js"></script>
+    <script src="js/leaflet-measure.js"></script>
+
+</body>
+</html>
         <title></title>
     </head>
     <body>
@@ -125,9 +140,8 @@
             highlightLayer.openPopup();
         }
         var map = L.map('map', {
-            zoomControl:false, maxZoom:20, minZoom:1
-        }).fitBounds([[35.80476152720185,10.598954618146767],[35.847365380866464,10.687354877580526]]);
-        var hash = new L.Hash(map);
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).setView([35.82, 10.62], 15); // 15 est le niveau de zoom (ajustable)
         map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
         var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
         // remove popup's row if "visible-with-data"
@@ -191,49 +205,59 @@
                 popup._contentNode.classList.remove('media');
             }
         }
-        var zoomControl = L.control.zoom({
-            position: 'topleft'
-        }).addTo(map);
-        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
-        var measureControl = new L.Control.Measure({
-            position: 'topleft',
-            primaryLengthUnit: 'meters',
-            secondaryLengthUnit: 'kilometers',
-            primaryAreaUnit: 'sqmeters',
-            secondaryAreaUnit: 'hectares'
-        });
-        measureControl.addTo(map);
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
-        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
-        var bounds_group = new L.featureGroup([]);
-        function setBounds() {
-        }
-        map.createPane('pane_OpenStreetMap_0');
-        map.getPane('pane_OpenStreetMap_0').style.zIndex = 400;
-        var layer_OpenStreetMap_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            pane: 'pane_OpenStreetMap_0',
-            opacity: 1.0,
-            attribution: '',
-            minZoom: 1,
-            maxZoom: 20,
-            minNativeZoom: 0,
-            maxNativeZoom: 19
-        });
+       // 1. Zoom
+var zoomControl = L.control.zoom({
+    position: 'topleft'
+}).addTo(map);
+
+// 2. Localisation
+L.control.locate({
+    locateOptions: { maxZoom: 19 }
+}).addTo(map);
+
+// 3. Mesure
+var measureControl = new L.Control.Measure({
+    position: 'topleft',
+    primaryLengthUnit: 'meters',
+    secondaryLengthUnit: 'kilometers',
+    primaryAreaUnit: 'sqmeters',
+    secondaryAreaUnit: 'hectares'
+});
+measureControl.addTo(map);
+
+// Correction de l'icône de mesure avec vérification de sécurité
+// On utilise un délai très court (setTimeout) pour s'assurer que le bouton existe
+setTimeout(function() {
+    var toggleBtn = document.querySelector('.leaflet-control-measure-toggle');
+    if (toggleBtn) {
+        toggleBtn.innerHTML = '';
+        toggleBtn.classList.add('fas', 'fa-ruler');
+    }
+}, 500);
+
+// 4. Groupes et Panes
+var bounds_group = new L.featureGroup([]);
+function setBounds() {}
+
+map.createPane('pane_OpenStreetMap_0');
+map.getPane('pane_OpenStreetMap_0').style.zIndex = 400;
+
+// 5. Couche OSM
+var layer_OpenStreetMap_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    pane: 'pane_OpenStreetMap_0',
+    opacity: 1.0,
+    attribution: '',
+    minZoom: 1,
+    maxZoom: 20,
+    minNativeZoom: 0,
+    maxNativeZoom: 19
+});
+
+layer_OpenStreetMap_0.addTo(map);
         layer_OpenStreetMap_0;
         map.addLayer(layer_OpenStreetMap_0);
         function pop_webZone_vegetale_1(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -289,18 +313,7 @@
         bounds_group.addLayer(layer_webZone_vegetale_1);
         map.addLayer(layer_webZone_vegetale_1);
         function pop_webvoie_ferree_2(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -358,18 +371,7 @@
         bounds_group.addLayer(layer_webvoie_ferree_2);
         map.addLayer(layer_webvoie_ferree_2);
         function pop_webvegetation_lineare_3(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+           
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -419,18 +421,7 @@
         bounds_group.addLayer(layer_webvegetation_lineare_3);
         map.addLayer(layer_webvegetation_lineare_3);
         function pop_webroute_4(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -492,18 +483,7 @@
         bounds_group.addLayer(layer_webroute_4);
         map.addLayer(layer_webroute_4);
         function pop_webpont_5(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -567,18 +547,7 @@
         bounds_group.addLayer(layer_webpont_5);
         map.addLayer(layer_webpont_5);
         function pop_webgare_6(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+           
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -642,18 +611,7 @@
         bounds_group.addLayer(layer_webgare_6);
         map.addLayer(layer_webgare_6);
         function pop_webetendue_deau_7(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+           
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -713,18 +671,7 @@
         bounds_group.addLayer(layer_webetendue_deau_7);
         map.addLayer(layer_webetendue_deau_7);
         function pop_webequipement_socio_collectif_8(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+           
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -761,16 +708,16 @@
         function style_webequipement_socio_collectif_8_0() {
             return {
                 pane: 'pane_webequipement_socio_collectif_8',
-                opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(190,207,80,1.0)',
-                interactive: true,
+     opacity: 1,
+    color: 'rgba(25,25,25,1.0)',      // contour noir foncé
+    weight: 1.1,
+    dashArray: '',
+    lineCap: 'butt',
+    lineJoin: 'miter',
+    fill: true,
+    fillOpacity: 1,
+    fillColor: 'rgba(200,60,60,1.0)', // rouge modéré
+    interactive: true,
             }
         }
         map.createPane('pane_webequipement_socio_collectif_8');
@@ -788,18 +735,7 @@
         bounds_group.addLayer(layer_webequipement_socio_collectif_8);
         map.addLayer(layer_webequipement_socio_collectif_8);
         function pop_webcours_deau_9(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -853,18 +789,7 @@
         bounds_group.addLayer(layer_webcours_deau_9);
         map.addLayer(layer_webcours_deau_9);
         function pop_webconstruction_residentielle_10(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+           
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -902,15 +827,15 @@
             return {
                 pane: 'pane_webconstruction_residentielle_10',
                 opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(125,139,143,1.0)',
-                interactive: true,
+    color: 'rgba(25,25,25,1.0)',      // contour noir foncé
+    weight: 1.1,
+    dashArray: '',
+    lineCap: 'butt',
+    lineJoin: 'miter',
+    fill: true,
+    fillOpacity: 1,
+    fillColor: 'rgba(200,60,60,1.0)', // rouge modéré
+    interactive: true,
             }
         }
         map.createPane('pane_webconstruction_residentielle_10');
@@ -928,18 +853,7 @@
         bounds_group.addLayer(layer_webconstruction_residentielle_10);
         map.addLayer(layer_webconstruction_residentielle_10);
         function pop_webconstruction_remarquable_11(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -977,15 +891,15 @@
             return {
                 pane: 'pane_webconstruction_remarquable_11',
                 opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(213,180,60,1.0)',
-                interactive: true,
+    color: 'rgba(25,25,25,1.0)',      // contour noir foncé
+    weight: 1.1,
+    dashArray: '',
+    lineCap: 'butt',
+    lineJoin: 'miter',
+    fill: true,
+    fillOpacity: 1,
+    fillColor: 'rgba(200,60,60,1.0)', // rouge modéré
+    interactive: true,
             }
         }
         map.createPane('pane_webconstruction_remarquable_11');
@@ -1003,18 +917,7 @@
         bounds_group.addLayer(layer_webconstruction_remarquable_11);
         map.addLayer(layer_webconstruction_remarquable_11);
         function pop_webconstruction_lineaire_12(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+           
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -1044,13 +947,15 @@
             return {
                 pane: 'pane_webconstruction_lineaire_12',
                 opacity: 1,
-                color: 'rgba(141,90,153,1.0)',
-                dashArray: '',
-                lineCap: 'square',
-                lineJoin: 'bevel',
-                weight: 1.0,
-                fillOpacity: 0,
-                interactive: true,
+    color: 'rgba(25,25,25,1.0)',      // contour noir foncé
+    weight: 1.1,
+    dashArray: '',
+    lineCap: 'butt',
+    lineJoin: 'miter',
+    fill: true,
+    fillOpacity: 1,
+    fillColor: 'rgba(200,60,60,1.0)', // rouge modéré
+    interactive: true,
             }
         }
         map.createPane('pane_webconstruction_lineaire_12');
@@ -1068,18 +973,7 @@
         bounds_group.addLayer(layer_webconstruction_lineaire_12);
         map.addLayer(layer_webconstruction_lineaire_12);
         function pop_webconstruction_industrielle_13(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -1115,15 +1009,15 @@
             return {
                 pane: 'pane_webconstruction_industrielle_13',
                 opacity: 1,
-                color: 'rgba(35,35,35,1.0)',
-                dashArray: '',
-                lineCap: 'butt',
-                lineJoin: 'miter',
-                weight: 1.0, 
-                fill: true,
-                fillOpacity: 1,
-                fillColor: 'rgba(183,72,75,1.0)',
-                interactive: true,
+    color: 'rgba(25,25,25,1.0)',      // contour noir foncé
+    weight: 1.1,
+    dashArray: '',
+    lineCap: 'butt',
+    lineJoin: 'miter',
+    fill: true,
+    fillOpacity: 1,
+    fillColor: 'rgba(200,60,60,1.0)', // rouge modéré
+    interactive: true,
             }
         }
         map.createPane('pane_webconstruction_industrielle_13');
@@ -1141,18 +1035,7 @@
         bounds_group.addLayer(layer_webconstruction_industrielle_13);
         map.addLayer(layer_webconstruction_industrielle_13);
         function pop_webchemin_14(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+            
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -1206,18 +1089,7 @@
         bounds_group.addLayer(layer_webchemin_14);
         map.addLayer(layer_webchemin_14);
         function pop_webamenagement_routier_surfacique_15(feature, layer) {
-            layer.on({
-                mouseout: function(e) {
-                    if (typeof layer.closePopup == 'function') {
-                        layer.closePopup();
-                    } else {
-                        layer.eachLayer(function(feature){
-                            feature.closePopup()
-                        });
-                    }
-                },
-                mouseover: highlightFeature,
-            });
+           
             var popupContent = '<table>\
                     <tr>\
                         <th scope="row">OBJECTID</th>\
@@ -1293,21 +1165,19 @@
         var marker = null;
         // Add an event listener to the Photon control to create a marker from the returned geoJSON data
         var z = null;
-        photonControl.on('selected', function(e) {
-            console.log(photonControl.search.resultsContainer);
-            if (x != null) {
-                map.removeLayer(obj3.marker);
-                map.removeLayer(x);
-            }
-            obj2.gcd = e.choice;
-            x = L.geoJSON(obj2.gcd).addTo(map);
-            var label = typeof obj2.gcd.properties.label === 'undefined' ? obj2.gcd.properties.display_name : obj2.gcd.properties.label;
-            obj3.marker = L.marker(x.getLayers()[0].getLatLng()).bindPopup(label).addTo(map);
-            map.setView(x.getLayers()[0].getLatLng(), 17);
-            z = typeof e.choice.properties.label === 'undefined'? e.choice.properties.display_name : e.choice.properties.label;
-            console.log(e);
-            e.target.input.value = z;
-        });
+       var searchMarker = null;
+photonControl.on('selected', function(e) {
+    if (searchMarker) {
+        map.removeLayer(searchMarker);
+    }
+    var choice = e.choice;
+    var latLng = [choice.geometry.coordinates[1], choice.geometry.coordinates[0]];
+    var label = choice.properties.label || choice.properties.display_name;
+    
+    searchMarker = L.marker(latLng).bindPopup(label).addTo(map);
+    map.setView(latLng, 17);
+    e.target.input.value = label;
+});
         var search = document.getElementsByClassName("leaflet-photon leaflet-control")[0];
         search.classList.add("leaflet-control-search")
         search.style.display = "flex";
@@ -1357,6 +1227,9 @@
         });
         lay.addTo(map);
         setBounds();
+map.on('mousemove', function(e) {
+            document.getElementById('coordinates').innerHTML = "Long: " + e.latlng.lng.toFixed(5) + " | Lat: " + e.latlng.lat.toFixed(5);
+        });
         </script>        
     </body>
 </html>
