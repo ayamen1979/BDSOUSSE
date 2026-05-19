@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>PFE - Cartographie Interactive de Sousse</title>
 
+
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="css/leaflet.css">
     <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
@@ -48,6 +49,30 @@
     }
 
         footer { background: #f8f9fa; border-top: 3px solid #004a99; padding: 1.5rem 0; font-size: 0.9rem; }
+<!-- À placer dans <head> ou juste avant </body> -->
+<style>
+#exportBtn {
+    position: absolute;
+    top: 120px;
+    right: 20px;
+    z-index: 9999;
+}
+
+#exportBtn button {
+    background: #198754;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+#exportBtn button:hover {
+    background: #157347;
+}
+</style>
     </style>
 </head>
 <body>
@@ -81,7 +106,11 @@
             </div>
         </div>
     </main>
-
+<div id="exportBtn">
+    <button onclick="exporterToutLeProjet()">
+        💾 Exporter les données
+    </button>
+</div>
     <footer class="text-center text-muted">
         <div class="container">
             <p class="mb-1">© 2026 - Projet de Fin d'Études | Réalisé par <strong>Yamen Abbes & Kabil Ezzine</strong></p>
@@ -89,6 +118,7 @@
     </footer>
 
     <div id="coordinates" class="coordinate-display">Longitude: 0.00000 | Latitude: 0.00000</div>
+<script src="https://rawgit.com/rowanwins/leaflet-easyPrint/gh-pages/dist/bundle.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/leaflet.js"></script>
@@ -97,6 +127,7 @@
     <script src="js/L.Control.Locate.min.js"></script>
     <script src="js/leaflet.photon.js"></script>
     <script src="js/leaflet-measure.js"></script>
+<script src="https://rawgit.com/rowanwins/leaflet-easyPrint/gh-pages/dist/bundle.js"></script>
 
 </body>
 </html>
@@ -134,6 +165,7 @@
         <script src="data/webchemin_14.js"></script>
         <script src="data/webamenagement_routier_surfacique_15.js"></script>
         <script>
+
         var highlightLayer;
         function highlightFeature(e) {
             highlightLayer = e.target;
@@ -224,7 +256,36 @@ var measureControl = new L.Control.Measure({
     secondaryAreaUnit: 'hectares'
 });
 measureControl.addTo(map);
-
+// 6. Flèche du Nord (Statique pour PFE)
+    var northControl = L.Control.extend({
+        options: { position: 'topright' },
+        onAdd: function(map) {
+            var div = L.DomUtil.create('div', 'leaflet-control');
+            div.innerHTML = '<img src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcQ3dj63g7nW5zwSsZB4gxIYxFoCzZUCZ_Ii7165msDNytXJN-_oS2DnDNJwQLYq" ' + 
+                        'style="width:50px; filter: contrast(1.2);">';
+            return div;
+        }
+    });
+    map.addControl(new northControl());
+// 4. Bouton Imprimer (Print) - Version avec icône agrandie
+var printerControl = L.Control.extend({
+    options: { position: 'topright' }, // Changez ici si besoin ('topleft', etc.)
+    
+    onAdd: function(map) {
+        var container = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
+        
+        // Modification : font-size: 2.5em agrandit l'émoji, padding: 8px agrandit le bouton
+       // Modification : On utilise flexbox pour un centrage parfait vertical et horizontal
+container.innerHTML = '<a href="#" title="Imprimer/PDF" style="display: flex; align-items: center; justify-content: center; width: 50px; height: 50px; font-size: 2em; text-decoration: none; color: black;">🖨️</a>';
+        
+        container.onclick = function(e) { 
+            e.preventDefault(); 
+            window.print(); 
+        };
+        return container;
+    }
+});
+map.addControl(new printerControl());
 // Correction de l'icône de mesure avec vérification de sécurité
 // On utilise un délai très court (setTimeout) pour s'assurer que le bouton existe
 setTimeout(function() {
@@ -241,6 +302,25 @@ function setBounds() {}
 
 map.createPane('pane_OpenStreetMap_0');
 map.getPane('pane_OpenStreetMap_0').style.zIndex = 400;
+function exporterEnCSV(donnees, nomFichier) {
+    // 1. Création de l'en-tête (adapter selon vos colonnes)
+    var csvContent = "data:text/csv;charset=utf-8,ID,Nom,Lat,Lng\n";
+
+    // 2. Ajout des lignes
+    donnees.forEach(function(item) {
+        var row = [item.id, item.nom, item.lat, item.lng].join(",");
+        csvContent += row + "\n";
+    });
+
+    // 3. Création et téléchargement automatique du fichier
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", nomFichier + ".csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
 
 // 5. Couche OSM
 var layer_OpenStreetMap_0 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -1230,6 +1310,129 @@ photonControl.on('selected', function(e) {
 map.on('mousemove', function(e) {
             document.getElementById('coordinates').innerHTML = "Long: " + e.latlng.lng.toFixed(5) + " | Lat: " + e.latlng.lat.toFixed(5);
         });
+function exporterToutLeProjet() {
+    try {
+        const couches = [
+            { nom: "Zone_vegetale", data: typeof json_webZone_vegetale_1 !== "undefined" ? json_webZone_vegetale_1 : null },
+            { nom: "Voie_ferree", data: typeof json_webvoie_ferree_2 !== "undefined" ? json_webvoie_ferree_2 : null },
+            { nom: "Vegetation_lineaire", data: typeof json_webvegetation_lineare_3 !== "undefined" ? json_webvegetation_lineare_3 : null },
+            { nom: "Route", data: typeof json_webroute_4 !== "undefined" ? json_webroute_4 : null },
+            { nom: "Pont", data: typeof json_webpont_5 !== "undefined" ? json_webpont_5 : null },
+            { nom: "Gare", data: typeof json_webgare_6 !== "undefined" ? json_webgare_6 : null },
+            { nom: "Etendue_deau", data: typeof json_webetendue_deau_7 !== "undefined" ? json_webetendue_deau_7 : null },
+            { nom: "Equipement_socio", data: typeof json_webequipement_socio_collectif_8 !== "undefined" ? json_webequipement_socio_collectif_8 : null },
+            { nom: "Cours_deau", data: typeof json_webcours_deau_9 !== "undefined" ? json_webcours_deau_9 : null },
+            { nom: "Construction_residentielle", data: typeof json_webconstruction_residentielle_10 !== "undefined" ? json_webconstruction_residentielle_10 : null },
+            { nom: "Construction_remarquable", data: typeof json_webconstruction_remarquable_11 !== "undefined" ? json_webconstruction_remarquable_11 : null },
+            { nom: "Construction_lineaire", data: typeof json_webconstruction_lineaire_12 !== "undefined" ? json_webconstruction_lineaire_12 : null },
+            { nom: "Construction_industrielle", data: typeof json_webconstruction_industrielle_13 !== "undefined" ? json_webconstruction_industrielle_13 : null },
+            { nom: "Chemin", data: typeof json_webchemin_14 !== "undefined" ? json_webchemin_14 : null },
+            { nom: "Amenagement_routier", data: typeof json_webamenagement_routier_surfacique_15 !== "undefined" ? json_webamenagement_routier_surfacique_15 : null }
+        ];
+
+        let csvRows = [];
+
+        // En-tête simplifié
+     csvRows.push([
+    "ID",
+    "COUCHE",
+    "TYPE_GEOMETRIE",
+    "LONGITUDE",
+    "LATITUDE",
+    "DESCRIPTION",
+    "SHAPE_LENG",
+    "SHAPE_AREA"
+]);
+
+let idGlobal = 1;
+
+function extraireCoordonnees(coords) {
+    const points = [];
+
+    function parcourir(c) {
+        if (!Array.isArray(c)) return;
+
+        if (typeof c[0] === "number" && typeof c[1] === "number") {
+            points.push(c);
+        } else {
+            c.forEach(parcourir);
+        }
+    }
+
+    parcourir(coords);
+    return points;
+}
+
+couches.forEach(couche => {
+    if (!couche.data?.features) return;
+
+    couche.data.features.forEach(feature => {
+        if (!feature.geometry?.coordinates) return;
+
+        const typeGeom = feature.geometry.type || "";
+        const points = extraireCoordonnees(feature.geometry.coordinates);
+        const props = feature.properties || {};
+
+        const shapeLeng = props.Shape_Leng || props.SHAPE_LENG || "";
+        const shapeArea = props.Shape_Area || props.SHAPE_AREA || "";
+
+        const description = Object.entries(props)
+            .filter(([key]) =>
+                !["Shape_Leng", "SHAPE_LENG", "Shape_Area", "SHAPE_AREA", "NATURE", "NATURE_ZVE"].includes(key)
+            )
+            .map(([key, value]) => `${key}: ${value}`)
+            .join(" | ");
+
+        points.forEach(pt => {
+            csvRows.push([
+                idGlobal++,
+                couche.nom || "",
+                typeGeom,
+                pt[0],
+                pt[1],
+                description,
+                shapeLeng,
+                shapeArea
+            ]);
+        });
+    });
+});
+
+        if (csvRows.length <= 1) {
+            alert("Aucune donnée à exporter.");
+            return;
+        }
+
+        // CSV optimisé Excel
+        const csvContent = csvRows.map(row =>
+            row.map(cell =>
+                `"${String(cell).replace(/"/g, '""')}"`
+            ).join(";")
+        ).join("\n");
+
+        const blob = new Blob(
+            ["\uFEFF" + csvContent],
+            { type: "text/csv;charset=utf-8;" }
+        );
+
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "Projet_Sousse_Donnés.csv";
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+
+        alert("Export structuré réussi !");
+    } catch (error) {
+        console.error("Erreur export :", error);
+        alert("Erreur lors de l'export.");
+    }
+}
         </script>        
     </body>
 </html>
